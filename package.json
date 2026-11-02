@@ -1,0 +1,11 @@
+{
+  "name": "coding-jam-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A playful, accessible 60-minute Coding Jam practice for KS2 and KS3 teams.",
+  "scripts": {
+    "dev": "python3 -m http.server 5187 --bind 127.0.0.1",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
