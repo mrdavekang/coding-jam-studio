@@ -1,0 +1,14 @@
+let threshold = 128
+let reading = 0
+basic.showIcon(IconNames.Heart)
+input.onButtonPressed(Button.A, function () {
+    reading = input.lightLevel()
+    if (reading < threshold) {
+        basic.showIcon(IconNames.Yes)
+    } else {
+        basic.showIcon(IconNames.No)
+    }
+})
+input.onButtonPressed(Button.B, function () {
+    basic.showNumber(input.lightLevel())
+})

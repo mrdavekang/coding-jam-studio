@@ -8,7 +8,7 @@ A standalone, buildless web app for a playful first Coding Jam preparation lesso
 
 ## Session 2
 
-[Build something that helps](https://mrdavekang.github.io/coding-jam-studio/session-2/) is a second 60-minute session. Choose an interactive school guide, a branching story or a digital checklist. Each route includes a Scratch starter, annotated editor captures, and steps for building, playtesting and saving. The teacher guide provides three working Scratch examples.
+[Session 2](https://mrdavekang.github.io/coding-jam-studio/session-2/) starts with short practice checks and offers three 20-card guides. Campus Quest and The Lantern Trail have editable Scratch starters, examples and downloadable pixel art. Room Sentinel uses MakeCode micro:bit with a Grove light sensor or the built-in light simulator. The teacher view links to each full guide.
 
 ## The first 60-minute session
 

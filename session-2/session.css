@@ -172,3 +172,31 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 9p
   .session-label { display: none; }
   .order-task { grid-template-columns: 1fr; }
 }
+
+.project-art { position: relative; overflow: hidden; aspect-ratio: 4 / 3; background: #172747; }
+.project-art img:first-child { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.project-art .art-actor { position: absolute; width: 12%; height: auto; left: 44%; top: 67%; image-rendering: pixelated; }
+.project-art .art-actor.sam { width: 14%; left: 43%; top: 42%; }
+.guide-menu, .card-group { margin: 12px 0; }
+.guide-menu > summary, .card-group > summary { display: list-item; cursor: pointer; margin: 5px 4px; font-size: .77rem; font-weight: 750; }
+.guide-menu summary span, .card-group summary span { float: right; margin-left: 6px; color: var(--muted); }
+.card-group { padding-left: 6px; border-left: 2px solid var(--line); }
+.card-group .nav-step { font-size: .76rem; line-height: 1.25; }
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(145px,100%),1fr)); gap: 12px; margin: 18px 0; align-items: start; }
+.asset-grid figure { display: grid; place-items: center; margin: 0; background: #eff2f8; border: 1px solid var(--line); border-radius: 9px; padding: 9px; }
+.asset-grid img { display: block; max-width: 100%; height: auto; max-height: 235px; image-rendering: pixelated; object-fit: contain; }
+.asset-grid figcaption { margin-top: 5px; font-size: .8rem; text-transform: capitalize; }
+.meter { display: grid; gap: 10px; max-width: 560px; padding: 18px; margin: 15px 0; background: #edf0ff; border-radius: 12px; }
+.meter h2 { margin: 0; }
+.meter label { display: grid; gap: 4px; font-weight: 700; }
+.meter input, .meter select { font: inherit; }
+.meter input[type=range] { width: 100%; accent-color: var(--blue); }
+.meter output { font-weight: 800; }
+#meter-result { color: #1d2540; background: white; border-left: 3px solid var(--blue); padding: 8px 10px; }
+#card-shortcut:not(:empty) { margin-top: 11px; }
+.makecode-example { background: var(--navy); color: white; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
+@media (max-width: 690px) {
+  #lesson-progress nav:has(.guide-menu[open]) { display: block; }
+  #lesson-progress .guide-menu[open] > .card-group ol { display: grid; }
+  #lesson-progress .guide-menu[open] .nav-step { white-space: normal; }
+}

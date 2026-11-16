@@ -1,17 +1,14 @@
 import { projects, screenshots, commonPractice, branchPractice } from './content.js';
+import { guides, cardGroups, groupStart, cardGroup } from './project-cards.js';
 
 const main = document.querySelector('#activity');
 const sidebar = document.querySelector('#lesson-progress');
 const imageDialog = document.querySelector('#image-dialog');
 const practiceKey = 'coding-jam-session-2/guided-practice-v1';
-const buildSteps = [
-  ['open', 'Open the starter', 'open'],
-  ['first-click', 'Make a button speak', 'first'],
-  ['build', 'Build the first response', 'build'],
-  ['second', 'Add a second response', 'second'],
-  ['playtest', 'Playtest and improve', 'test'],
-  ['save', 'Save and show', 'save'],
-];
+const preview = new URLSearchParams(location.search).get('preview') === '1' && Boolean(projectInUrl());
+const legacy = { setup: 'card-1', open: 'card-2', 'first-click': 'card-5', build: 'card-7',
+  second: 'card-10', playtest: 'card-17', save: 'card-19' };
+const cardIds = Array.from({ length: 20 }, (_, index) => `card-${index + 1}`);
 const shots = [];
 const attempts = new Map();
 const checkpoints = new Map();
@@ -33,7 +30,8 @@ function restore() {
   try { value = JSON.parse(read(practiceKey)); } catch {}
   return {
     common: practiceIds.filter(id => Array.isArray(value?.common) && value.common.includes(id)),
-    branches: Object.keys(projects).filter(id => Array.isArray(value?.branches) && value.branches.includes(id)),
+    branches: Object.keys(projects).filter(id => value?.routeVersion === 2 && Array.isArray(value.branches) && value.branches.includes(id)),
+    routeVersion: 2,
     selected: Object.hasOwn(projects, value?.selected) ? value.selected : null,
     last: typeof value?.last === 'string' ? value.last : null,
   };
@@ -44,9 +42,17 @@ function projectInUrl() {
   return id && Object.hasOwn(projects, id) ? id : null;
 }
 
+function checkpointKey(id) {
+  return `coding-jam-session-2/cards/${selected}/${id}`;
+}
+
 function checkpoint(id) {
-  const key = `coding-jam-session-2/${selected}/${id}`;
+  const key = checkpointKey(id);
   return checkpoints.has(key) ? checkpoints.get(key) : read(key) === 'true';
+}
+
+function canSkip(id) {
+  return id === 'optional-visited' || Boolean(guides[selected]?.[cardIds.indexOf(id)]?.optional);
 }
 
 function gate() {
@@ -54,30 +60,32 @@ function gate() {
   if (pending) return pending;
   if (!selected) return 'projects';
   if (!state.branches.includes(selected)) return 'project-check';
-  return buildSteps.find(([, , id]) => !checkpoint(id))?.[0] || 'done';
-}
-
-function sequence() {
-  return [...practiceIds, 'projects', 'project-check', ...buildSteps.map(([id]) => id), 'done'];
+  for (const id of cardIds) {
+    if (!checkpoint(id) && !(canSkip(id) && (checkpoint('optional-visited') || checkpoint('skip-' + id)))) return id;
+  }
+  return 'done';
 }
 
 function available(id) {
   if (id === 'teacher') return true;
-  const position = sequence().indexOf(id);
-  return position >= 0 && position <= sequence().indexOf(gate());
+  if (preview && selected) return cardIds.includes(id) || id === 'done';
+  const sequence = [...practiceIds, 'projects', 'project-check', ...cardIds, 'done'];
+  const i = sequence.indexOf(id);
+  return i >= 0 && i <= sequence.indexOf(gate());
 }
 
 function route() {
   selected = projectInUrl() || state.selected;
   let wanted = location.hash.slice(1);
-  if (wanted === 'setup') wanted = 'open';
+  if (Object.hasOwn(legacy, wanted)) wanted = legacy[wanted];
+  if (preview && !wanted) wanted = 'card-1';
   if (!wanted || wanted === 'activity') wanted = state.last || gate();
   if (wanted === 'resume') wanted = state.last || gate();
-  step = available(wanted) ? wanted : gate();
+  step = available(wanted) ? wanted : preview && selected ? 'card-1' : gate();
   if (location.hash !== `#${step}`) {
     history.replaceState(null, '', location.pathname + location.search + '#' + step);
   }
-  if (step !== 'teacher') {
+  if (step !== 'teacher' && !preview) {
     state.last = step;
     write(practiceKey, JSON.stringify(state));
   }
@@ -115,16 +123,28 @@ function navItem(id, label, status, number) {
 
 function progress() {
   const count = state.common.length + Number(Boolean(selected && state.branches.includes(selected)));
+  const built = selected ? cardIds.filter(checkpoint).length : 0;
+  const current = cardIds.indexOf(step);
+  const expanded = !preview && current < 0 ? '' : 'open';
+  const groups = selected ? cardGroups.map((name, group) => {
+    const start = groupStart[group], end = groupStart[group + 1] ?? cardIds.length;
+    const done = cardIds.slice(start, end).filter(checkpoint).length;
+    return `<details class="card-group" ${current >= start && current < end ? 'open' : ''}><summary>${name}<span>${done}/${end - start}</span></summary><ol>${guides[selected].slice(start, end).map(({ title }, i) => {
+      const id = cardIds[start + i];
+      return navItem(id, title, checkpoint(id) ? 'complete' : '', start + i + 1);
+    }).join('')}</ol></details>`;
+  }).join('') : '';
   sidebar.innerHTML = `
-    <div class="progress-head"><span>Your lesson</span><strong>${count}/5 checks</strong></div>
-    <progress max="5" value="${count}" aria-label="Practice checks passed"></progress>
+    <div class="progress-head"><span>${preview ? 'Guide preview' : 'Your lesson'}</span><strong>${preview ? '20 cards' : count + '/5 checks'}</strong></div>
+    ${preview ? '' : `<progress max="5" value="${count}" aria-label="Practice checks passed"></progress>`}
     <nav aria-label="Lesson steps">
-      <p>Learn the basics</p>
+      ${preview ? '' : `<p>Learn the basics</p>
       <ol>${commonPractice.map(({ id, label }, i) => navItem(id, label, state.common.includes(id) ? 'complete' : '', i + 1)).join('')}</ol>
       <p>Choose a project</p>
-      <ol>${navItem('projects', 'Pick a project', selected && state.selected === selected && available('projects') ? 'complete' : '', '↗')}${navItem('project-check', 'Project quick check', selected && state.branches.includes(selected) ? 'complete' : '', '5')}</ol>
-      <p>Make and share</p>
-      <ol>${selected ? buildSteps.map(([id, label, key], i) => navItem(id, label, checkpoint(key) ? 'complete' : '', i + 1)).join('') : navItem('open', 'Build and playtest', '', '1')}</ol>
+      <ol>${navItem('projects', 'Pick a project', selected && state.selected === selected && available('projects') ? 'complete' : '', '↗')}${navItem('project-check', 'Project quick check', selected && state.branches.includes(selected) ? 'complete' : '', '5')}</ol>`}
+      <details class="guide-menu" ${expanded}><summary>Project guide <span>${built}/20</span></summary>
+      ${groups || '<p>Choose a project after the practice checks.</p>'}
+      </details>
     </nav>`;
 }
 
@@ -177,7 +197,7 @@ function solutionTask(item) {
   const passed = isPassed(item);
   const position = item.id ? practiceIds.indexOf(item.id) : 4;
   const before = position === 4 ? 'projects' : practiceIds[position - 1];
-  const after = position === 4 ? 'open' : practiceIds[position + 1] || 'projects';
+  const after = position === 4 ? 'card-1' : practiceIds[position + 1] || 'projects';
   const order = item.kind === 'order';
   const chosenBlocks = passed && order ? [1, 0] : current.blocks;
   const status = passed ? taskStatus(item.feedback, 'success') : current.result === 'wrong' ?
@@ -206,7 +226,7 @@ function solutionTask(item) {
       <form id="question">
         ${item.questionShot ? `<div class="question-layout">${screenshot(item.questionShot)}${choices}</div>` : choices}
         ${status}
-        ${passed ? taskNav(before, after, position === 4 ? 'Open the starter' : position === 3 ? 'Choose a project' : 'Next task') :
+        ${passed ? taskNav(before, after, position === 4 ? 'Start the 20-card guide' : position === 3 ? 'Choose a project' : 'Next task') :
           `<div class="actions"><div class="secondary-actions">${before ? `<button type="button" class="subtle" data-step="${before}">← Back</button>` : ''}
             <button type="button" class="subtle" data-action="example" aria-controls="worked-example" aria-expanded="${current.help}">Worked example</button></div>
             <button class="primary" type="submit" ${(order ? current.blocks.length !== item.blocks.length : current.pick === null) ? 'disabled' : ''}>Check answer</button></div>`}
@@ -224,10 +244,11 @@ function projectChoices() {
   return `<article class="task-card">
     <div class="task-meta"><span>Choose a project</span><span>Teams of 2–3</span></div>
     <h1 tabindex="-1">What will your team make?</h1>
-    <p class="prompt">Choose one way to help someone at school or in your community. Do a quick check for that project, then open its Scratch starter.</p>
+    <p class="prompt">Choose one way to help someone at school or in your community. Do a quick check for that project, then follow its 20-card guide.</p>
     <div class="choices">${Object.entries(projects).map(([id, item]) => `
       <section class="project-choice">
-        <div class="stage-crop"><img src="./assets/screens/${item.art}.jpg" width="1280" height="720" alt=""></div>
+        <div class="project-art"><img src="./assets/art/${item.art}.png" width="480" height="360" alt="">
+          ${item.actor ? `<img class="art-actor ${id === 'playground-choices' ? 'sam' : ''}" src="./assets/art/${item.actor}.png" alt="">` : ''}</div>
         <div><p class="eyebrow">${item.kind}</p><h2>${item.name}</h2><p>${item.audience}</p>
           <button type="button" class="primary" data-project="${id}" aria-label="Choose ${item.name}">${selected === id ? 'Continue project' : 'Choose project'} <span aria-hidden="true">→</span></button>
         </div>
@@ -236,63 +257,55 @@ function projectChoices() {
   </article>`;
 }
 
+function pictureGallery(assets) {
+  return `<div class="asset-grid">${assets.map(file => {
+    const label = file.replaceAll('-', ' ');
+    return `<figure><img src="./assets/art/${file}.png" alt="${label}" loading="lazy"><figcaption><a href="./assets/art/${file}.png" download>${label} ↓</a></figcaption></figure>`;
+  }).join('')}</div>`;
+}
+
+function meter() {
+  return `<section class="meter" aria-labelledby="meter-heading">
+    <h2 id="meter-heading">Test the light rule</h2>
+    <label>Reading source <select id="meter-source"><option value="1023">Grove analog scale (0–1023)</option><option value="255">Simulator scale (0–255)</option></select></label>
+    <label>Threshold <input type="number" id="meter-limit" min="0" max="1023" value="500"></label>
+    <div><label for="meter-reading">Reading</label><output id="meter-value">300</output><input type="range" id="meter-reading" min="0" max="1023" value="300"></div>
+    <output id="meter-result" aria-live="polite">✓ Yes — dim enough</output>
+    <small>The slider models a number. Use MakeCode or your board to test your own program.</small>
+  </section>`;
+}
+
 function buildTask() {
+  const index = cardIds.indexOf(step);
   const project = projects[selected];
-  const index = buildSteps.findIndex(([id]) => id === step);
-  const [, title, key] = buildSteps[index];
-  const prev = buildSteps[index - 1]?.[0] || 'project-check';
-  const next = buildSteps[index + 1]?.[0] || 'done';
-  const filename = `${selected}-starter.sb3`;
-  let instructions;
-  let figures = [];
-  let done;
-  let extra = '';
-
-  switch (step) {
-    case 'open':
-      instructions = [`Download <strong>${filename}</strong>. Open Scratch in a new tab and keep this guide open.`, 'In Scratch, click <strong>File → Load from your computer</strong>. Open the file from Downloads.', `Select <strong>${project.first}</strong> in the sprite list below the Stage.`];
-      extra = `<div class="resource-actions"><a class="primary" href="./assets/starters/${filename}" download>Download Scratch starter ↓</a><a class="subtle" href="https://scratch.mit.edu/projects/editor/" target="_blank" rel="noopener">Open Scratch editor ↗</a></div>`;
-      figures = [screenshots.load, screenshots.editor];
-      done = 'Our starter is open in Scratch.';
-      break;
-    case 'first-click':
-      instructions = [`With <strong>${project.first}</strong> selected, drag <code>when this sprite clicked</code> from Events.`, 'From Looks, snap <code>say [Hello!] for (2) seconds</code> directly under the yellow block.', 'Click the sprite on the Stage. Show your teammate the speech bubble.'];
-      figures = [screenshots.events, screenshots.looks, screenshots.practice];
-      done = 'Our button says Hello.';
-      break;
-    case 'build':
-      instructions = project.tasks.slice(0, -1);
-      figures = project.shots.slice(0, -1);
-      done = project.checked;
-      break;
-    case 'second':
-      instructions = [project.tasks.at(-1)];
-      figures = project.shots.slice(-1);
-      extra = '<p>If you need more time, keep the response you already have and ask another team to try it.</p>';
-      done = 'We added the second response or are ready to test the first.';
-      break;
-    case 'playtest':
-      instructions = ['Invite another team to use your project. Watch where they click first. If a team is busy, swap roles and test it as if you are seeing it for the first time.', `Try <strong>${project.first}</strong> and, if it’s ready, <strong>${project.second}</strong>.`, 'Improve one part that caused confusion and try it again.'];
-      extra = `<details class="support"><summary>Ready for one more change?</summary><p>${project.stretch}</p></details>`;
-      done = 'At least one choice has been tested.';
-      break;
-    case 'save':
-      instructions = ['In Scratch choose <strong>File → Save to your computer</strong>.', `Find the <strong>.sb3</strong> file in Downloads. Rename it with your team nickname, for example <strong>pixel-potatoes-${selected}.sb3</strong>.`, 'Give a 20-second demo. Show one working feature and say who it helps.'];
-      figures = [screenshots.save];
-      done = 'We found our saved Scratch project.';
-      break;
-  }
-
-  return `<article class="task-card">
-    <div class="task-meta"><span>Build ${index + 1} of ${buildSteps.length}</span><span>${project.name}</span></div>
-    <h1 tabindex="-1">${title}</h1>
-    ${step === 'open' ? extra : ''}
-    <ol class="instructions">${instructions.map(text => `<li>${text}</li>`).join('')}</ol>
-    ${figures.length ? `<div class="build-shots">${figures.map(screenshot).join('')}</div>` : ''}
-    ${step === 'open' ? '' : extra}
-    ${step === 'first-click' ? `<details class="support"><summary>Nothing happened when we clicked</summary><p>Check the block stack is joined. Select the correct sprite below the Stage, then test by clicking it on the Stage.</p>${screenshot(screenshots.separate)}</details>` : ''}
-    <div class="ready"><label><input type="checkbox" data-checkpoint="${key}" ${checkpoint(key) ? 'checked' : ''}><span>${done}</span></label></div>
-    ${taskNav(prev, next, step === 'save' ? 'Finish session' : 'Continue', checkpoint(key))}
+  const item = guides[selected][index];
+  const prev = cardIds[index - 1] || 'project-check';
+  const next = cardIds[index + 1] || 'done';
+  const checked = checkpoint(step);
+  const group = cardGroups[cardGroup(index)];
+  const optionalShortcut = index === 11 && checked ?
+    '<button class="subtle" type="button" data-action="skip-extras">Go to test and share →</button>' : '';
+  return `<article class="task-card project-task">
+    <div class="task-meta"><span>Card ${index + 1} of 20</span><span>${project.name} · ${group}</span></div>
+    <h1 tabindex="-1">${item.title}</h1>
+    <p class="prompt">${item.aim}</p>
+    ${preview ? '<p class="feedback">Guide preview. Use Project guide to jump between cards.</p>' : ''}
+    ${item.optional ? '<p class="eyebrow">Optional improvement</p>' : ''}
+    ${item.links ? `<div class="resource-actions">${item.links.map(([url, label, download]) => `<a class="subtle" href="${url}" ${download ? 'download' : 'target="_blank" rel="noopener"'}>${label} ${download ? '↓' : '↗'}</a>`).join('')}</div>` : ''}
+    ${index === 0 && project.artPack ? `<p><a href="./assets/art/${project.artPack}" download>Download all the sprites, costumes and backgrounds ↓</a></p>` : ''}
+    <ol class="instructions">${item.steps.map(text => `<li>${text}</li>`).join('')}</ol>
+    ${item.art ? pictureGallery(item.art) : ''}
+    ${item.shot ? screenshot(screenshots[item.shot]) : ''}
+    ${item.meter ? meter() : ''}
+    <details class="support"><summary>Worked example or hint</summary>
+      ${item.example.includes('\n') ? selected === 'switch-off-checker' ?
+        `<pre class="makecode-example">${item.example.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</pre>` :
+        script(item.example.split('\n')) : `<p>${item.example}</p>`}
+    </details>
+    ${preview ? `<div class="ready"><strong>Check:</strong> ${item.expected}</div>` : `<div class="ready"><label><input type="checkbox" data-checkpoint="${step}" ${checked ? 'checked' : ''}><span>${item.expected}</span></label></div>`}
+    ${item.optional && !preview ? '<button class="text-button" type="button" data-action="skip-one">Skip this optional card →</button>' : ''}
+    <div id="card-shortcut">${!preview ? optionalShortcut : ''}</div>
+    ${taskNav(prev === 'project-check' && preview ? 'teacher' : prev, next, index === 19 ? 'Finish project' : 'Next card', preview || checked)}
   </article>`;
 }
 
@@ -305,7 +318,7 @@ function render() {
   } else if (step === 'projects') {
     main.innerHTML = projectChoices();
   } else if (step === 'done') {
-    main.innerHTML = `<article class="task-card"><p class="eyebrow">Session complete</p><h1 tabindex="-1">Your prototype is ready to share</h1><p>You practised Scratch, built a response and tested it. Keep your <strong>.sb3</strong> file for the next session.</p><div class="resource-actions"><button type="button" class="subtle" data-step="save">Review saving</button><button type="button" class="primary" data-step="projects">Try another project</button></div></article>`;
+    main.innerHTML = `<article class="task-card"><p class="eyebrow">Session complete</p><h1 tabindex="-1">Your prototype is ready to share</h1><p>You built and tested a prototype. Keep your project file for the next session.</p><div class="resource-actions"><button type="button" class="subtle" data-step="card-19">Review saving</button><button type="button" class="primary" data-step="${preview ? 'card-1' : 'projects'}">${preview ? 'Back to card 1' : 'Try another project'}</button></div></article>`;
   } else {
     const item = problem();
     main.innerHTML = item ? solutionTask(item) : buildTask();
@@ -319,10 +332,14 @@ main.addEventListener('change', event => {
     input.form.querySelector('[type="submit"]').disabled = false;
   }
   if (input.dataset.checkpoint) {
-    const key = `coding-jam-session-2/${selected}/${input.dataset.checkpoint}`;
+    const key = checkpointKey(input.dataset.checkpoint);
     checkpoints.set(key, input.checked);
     write(key, String(input.checked));
     main.querySelector('.actions .primary').disabled = !input.checked;
+    if (step === 'card-12') {
+      main.querySelector('#card-shortcut').innerHTML = input.checked ?
+        '<button class="subtle" type="button" data-action="skip-extras">Go to test and share →</button>' : '';
+    }
     progress();
   }
 });
@@ -352,6 +369,20 @@ document.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button) return;
 
+  if (button.dataset.action === 'skip-extras' || button.dataset.action === 'skip-one') {
+    if (button.dataset.action === 'skip-extras' && step === 'card-12' && checkpoint(step)) {
+      const key = checkpointKey('optional-visited');
+      checkpoints.set(key, true);
+      write(key, 'true');
+      navigate('card-17');
+    } else if (button.dataset.action === 'skip-one' && canSkip(step)) {
+      const key = checkpointKey('skip-' + step);
+      checkpoints.set(key, true);
+      write(key, 'true');
+      navigate(cardIds[cardIds.indexOf(step) + 1]);
+    }
+    return;
+  }
   if (button.dataset.close !== undefined) imageDialog.close();
   if (button.dataset.step) navigate(button.dataset.step);
   if (button.dataset.project) choose(button.dataset.project);
@@ -384,6 +415,22 @@ document.addEventListener('click', event => {
     clearTimeout(bubble.timer);
     bubble.timer = setTimeout(() => { bubble.textContent = ''; }, 2000);
   }
+});
+
+main.addEventListener('input', event => {
+  if (!event.target.closest('.meter')) return;
+  const source = main.querySelector('#meter-source');
+  const reading = main.querySelector('#meter-reading');
+  const limit = main.querySelector('#meter-limit');
+  if (event.target === source) {
+    reading.max = limit.max = source.value;
+    limit.value = source.value === '1023' ? 500 : 128;
+    reading.value = source.value === '1023' ? 300 : 100;
+  }
+  const value = Number(reading.value);
+  const threshold = Math.max(0, Math.min(Number(source.value), Number(limit.value)));
+  main.querySelector('#meter-value').textContent = value;
+  main.querySelector('#meter-result').textContent = value < threshold ? '✓ Yes — dim enough' : '✕ No — check the room';
 });
 
 main.addEventListener('toggle', event => {
