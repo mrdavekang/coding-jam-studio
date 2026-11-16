@@ -1,0 +1,158 @@
+export const projects = {
+  'find-your-way': {
+    name: 'Find Your Way',
+    kind: 'Interactive school guide',
+    audience: 'Help a new pupil find the library or the office.',
+    first: 'Library',
+    second: 'Office',
+    art: 'looks',
+    tasks: [
+      'Select the <strong>Library</strong> thumbnail under the Stage.',
+      'Keep <code>when this sprite clicked</code> and the <code>say</code> block you made. Click the white text box and type <strong>Go straight. Turn left.</strong>',
+      'Change <strong>2</strong> seconds to <strong>6</strong>. Click the Library button at the bottom of the Stage and read the directions.',
+      'Swap who has the keyboard. Select <strong>Office</strong>, add the same two blocks and type <strong>Go straight. Turn right.</strong> Test each button. Wait for its speech bubble to disappear before trying the next.',
+    ],
+    checked: 'At least one place gives the correct directions on our practice map.',
+    stretch: 'Use landmarks from a real place or add one more destination. Ask someone to check the directions.',
+    shots: [
+      ['map-result', 'Library gives directions', [[43, 22, 'Type the directions and set how long they show.'], [72, 54.5, 'Click the Library button on the Stage.']]],
+      ['map-office', 'Office gives different directions', [[71, 84, 'Select the Office sprite to give it its own code.'], [89, 54.5, 'Test the Office button on the Stage.']]],
+    ],
+  },
+  'playground-choices': {
+    name: 'Playground Choices',
+    kind: 'Interactive story',
+    audience: 'Help a reader explore two ways to welcome a new pupil.',
+    first: 'Invite Sam to play',
+    second: 'Ask what Sam would like',
+    art: 'story-start',
+    tasks: [
+      'Select <strong>Invite Sam to play</strong> below the Stage. In your code, drag the practice <code>say</code> block away from the yellow block.',
+      'Click <strong>Looks</strong>. Drag <code>switch backdrop to</code> under <code>when this sprite clicked</code>. A backdrop is the picture behind the story.',
+      'Open the dropdown in your new block and choose <strong>Join the game</strong>. Click <strong>Invite Sam to play</strong> on the Stage. Sam learns the rules and takes a turn.',
+      'Swap who has the keyboard. Select <strong>Ask what Sam would like</strong> and add its own click and backdrop blocks. Choose <strong>Quiet bench</strong>. Test both paths.',
+    ],
+    checked: 'At least one choice takes our reader to the matching ending.',
+    stretch: 'Change one line of dialogue using the Backdrops tab. Try the choice again and see how it changes the story.',
+    shots: [
+      ['story-start', 'Opening scene and first choice', [[43, 23, 'Choose Join the game in this dropdown.'], [72, 54.5, 'Click Invite Sam to play.']]],
+      ['story-game', 'Ending 1 — Join the game', [[83, 15, 'Sam learns the rules. The first choice leads here.']]],
+      ['story-bench', 'Ending 2 — Quiet bench', [[42, 23, 'The second sprite uses Quiet bench.'], [87, 15, 'Sam finds a quiet place and a shared interest.']]],
+    ],
+  },
+  'switch-off-checker': {
+    name: 'Switch-Off Checker',
+    kind: 'Digital classroom checklist',
+    audience: 'Help the last person leaving a room check the lights and projector.',
+    first: 'Lights off',
+    second: 'Projector off',
+    art: 'checklist-start',
+    tasks: [
+      'Select <strong>Lights off</strong> below the Stage. Drag the practice <code>say</code> block away from the yellow block.',
+      'Click <strong>Looks</strong>. Drag <code>switch costume to</code> under <code>when this sprite clicked</code>. A costume changes how one sprite looks.',
+      'Open the dropdown and choose <strong>Checked</strong>. Click the <strong>Lights off</strong> row on the Stage. Only that row should get a tick.',
+      'Swap who has the keyboard. Select <strong>Projector off</strong>, add the two blocks to that sprite and test it. Both rows should now be checked.',
+    ],
+    checked: 'A clicked item changes from an empty box to a tick.',
+    stretch: 'Think of one more thing the last person should check. If you know how to edit costumes, make a third row.',
+    shots: [
+      ['checklist-start', 'Make Lights off checkable', [[40, 22, 'Choose Checked in the dropdown.'], [81, 34, 'Click here after checking the lights.']]],
+      ['checklist-result', 'Only the clicked row has a tick', [[71, 34, 'Lights off is checked.'], [71, 44, 'Projector off is still empty.']]],
+      ['checklist-both', 'Both items are checked', [[72, 80, 'The Projector off sprite has its own click script.'], [71, 45, 'The second row now shows a tick.']]],
+    ],
+  },
+};
+
+export const screenshots = {
+  load: ['file-menu', 'Load your starter file', [[21, 3, 'Click File.'], [26, 14, 'Choose Load from your computer.']]],
+  editor: ['editor', 'Find your way around Scratch', [[65, 80, 'Select the sprite you want to code.'], [2.6, 30, 'Choose a block category.'], [44, 35, 'Build your script in this space.'], [80, 34, 'The Stage shows what the user sees.']]],
+  events: ['events', 'Find the yellow click block', [[2.6, 34, 'Click Events.'], [11, 34, 'Drag when this sprite clicked into the coding area.']]],
+  looks: ['looks', 'Find the purple say block', [[2.6, 21, 'Click Looks.'], [13, 17, 'Drag say … for 2 seconds under the yellow block.']]],
+  practice: ['first-click', 'Snap the blocks together and test', [[35, 21, 'Make sure the blocks touch. Edit the words inside the white box.'], [70, 55, 'Click the button on the Stage.'], [84, 45.5, 'Look for the speech bubble.']]],
+  separate: ['separate', 'Fix blocks that are apart', [[35, 23, 'The blocks have a gap. Drag the purple block up until it snaps under the yellow one.']]],
+  save: ['file-menu', 'Save your work', [[21, 3, 'Click File.'], [26, 19, 'Choose Save to your computer.']]],
+};
+
+const clickBlock = 'when this sprite clicked';
+const sayBlock = words => `say [${words}] for (2) seconds`;
+
+export const commonPractice = [
+  {
+    id: 'editor', label: 'Find the sprite', skill: 'Choose what to code', title: 'Find the button you want to code',
+    prompt: 'You want to give the Library button its own code. Where should you select it first?',
+    questionShot: ['editor', 'Look at the Scratch editor', [[81, 35, 'The large preview.'], [65, 80, 'The small thumbnails.'], [45, 36, 'The block workspace.']]],
+    options: ['On the large Stage', 'In the sprite list below the Stage', 'In the coding area'],
+    correct: 1,
+    feedback: 'Select the sprite in the list to open its code. Click it on the Stage later to test it.',
+    hint: 'Look below the large preview for the small thumbnails. Scratch outlines the object you select.',
+    example: 'To add code to Office, select its small thumbnail below the Stage. The coding area now belongs to Office. The big Office button is where you test it.',
+    exampleShot: screenshots.editor,
+  },
+  {
+    id: 'blocks', label: 'Connect two blocks', skill: 'An event starts an action', title: 'Build a click script',
+    prompt: 'Make the Help button say “I can help!” when somebody clicks it. Add the two blocks in the order Scratch should read them.',
+    kind: 'order',
+    blocks: [sayBlock('I can help!'), clickBlock],
+    feedback: 'The yellow event waits for the click. The purple block underneath then shows the message.',
+    hint: 'Which block tells Scratch when to start? Put that one at the top.',
+    example: 'A Welcome button has two connected blocks. The yellow block waits for a click. The purple block tells the sprite what to say.',
+    exampleBlocks: [clickBlock, sayBlock('Welcome!')],
+    exampleShot: screenshots.practice,
+  },
+  {
+    id: 'output', label: 'Predict the result', skill: 'Input, process and output', title: 'Predict what the user will see',
+    prompt: 'A button has this script. You click it on the Stage. What is the output?',
+    script: [clickBlock, 'say [Turn right.] for (6) seconds'],
+    options: ['The button waits six seconds, then speaks.', 'The whole background changes.', 'A speech bubble says “Turn right.” for six seconds.'],
+    correct: 2,
+    feedback: 'The click is the input. The blocks tell Scratch what to do. The speech bubble is the output.',
+    hint: 'Read the purple block. The text is what appears. The number tells you how long it stays visible.',
+    example: 'Click a Welcome sprite. Its script says “Hello!” for two seconds. Hello! appears straight away and disappears two seconds later.',
+    exampleBlocks: [clickBlock, sayBlock('Hello!')],
+  },
+  {
+    id: 'debug', label: 'Fix a mistake', skill: 'Check what the click can run', title: 'The button stays silent',
+    prompt: 'You clicked the correct button on the Stage, but the two blocks are apart. What should you try?',
+    script: [clickBlock, sayBlock('Hello!')], gap: true,
+    options: ['Snap the say block directly under the click block.', 'Move the say block above the click block.', 'Click the sprite thumbnail to run the script.'],
+    correct: 0,
+    feedback: 'Scratch runs the connected stack from the yellow event downwards. Click the sprite again after joining the blocks.',
+    hint: 'The click event starts one stack. Can Scratch reach the purple block from that stack?',
+    example: 'A sprite says “Hello!” when the purple block snaps underneath the yellow event. The same two blocks with a gap do not run together.',
+    exampleShot: screenshots.practice,
+  },
+];
+
+export const branchPractice = {
+  'find-your-way': {
+    skill: 'Change the message', title: 'Practise a direction button',
+    prompt: 'A Sports Hall button currently says “Turn left.” Keep the click event and six-second timing. Which action makes it show “Go straight.”?',
+    options: ['Change the event to the green flag.', 'Change the number of seconds to 2.', 'Replace the words in the white box of the say block.'],
+    correct: 2,
+    feedback: 'The white text box controls the words. The number controls how long the bubble stays.',
+    hint: 'The click and the length of time already work. Look for the box that contains the existing message.',
+    example: 'On the Library sprite, the say block contains “Go straight. Turn left.” Changing that text changes what the Library button says.',
+    exampleShot: projects['find-your-way'].shots[0],
+  },
+  'playground-choices': {
+    skill: 'Choose the next scene', title: 'Practise a story choice',
+    prompt: 'A “Look for the dragon” button should take the reader to the Cave scene. Which action belongs beneath the click block?',
+    options: ['say [Cave] for (2) seconds', 'switch backdrop to [Cave]', 'switch costume to [Cave]'],
+    correct: 1,
+    feedback: 'The backdrop is the scene behind the sprites. Use its dropdown to choose the ending.',
+    hint: 'Which block changes the picture behind every sprite?',
+    example: 'A “Walk to the pond” choice needs the Pond scene. Put switch backdrop to [Pond] directly beneath when this sprite clicked.',
+    exampleBlocks: [clickBlock, 'switch backdrop to [Pond]'],
+    exampleShot: projects['playground-choices'].shots[0],
+  },
+  'switch-off-checker': {
+    skill: 'Change one object', title: 'Practise a checklist tick',
+    prompt: 'The “Windows closed” box has two costumes, To do and Checked. The rest of the screen should stay the same. What belongs beneath its click block?',
+    options: ['switch costume to [Checked]', 'switch backdrop to [Checked]', 'say [Checked] for (2) seconds'],
+    correct: 0,
+    feedback: 'A costume changes the selected sprite’s appearance. Only the clicked box should gain a tick.',
+    hint: 'A backdrop changes the whole scene. Find the action that changes just this box.',
+    example: 'The Lights off sprite starts with an empty box. When it is clicked, switch costume to [Checked] makes its tick appear.',
+    exampleShot: projects['switch-off-checker'].shots[0],
+  },
+};
