@@ -6,7 +6,11 @@ A standalone, buildless web app for a playful first Coding Jam preparation lesso
 
 **Teacher view:** https://mrdavekang.github.io/coding-jam-studio/#teacher
 
-## The 60-minute session
+## Session 2
+
+[Build something that helps](https://mrdavekang.github.io/coding-jam-studio/session-2/) is a second 60-minute session. Choose an interactive school guide, a branching story or a digital checklist. Each route includes a Scratch starter, annotated editor captures, and steps for building, playtesting and saving. The teacher guide provides three working Scratch examples.
+
+## The first 60-minute session
 
 | Minute | Activity |
 | --- | --- |
