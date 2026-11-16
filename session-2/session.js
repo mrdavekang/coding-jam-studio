@@ -122,7 +122,7 @@ function progress() {
       <p>Learn the basics</p>
       <ol>${commonPractice.map(({ id, label }, i) => navItem(id, label, state.common.includes(id) ? 'complete' : '', i + 1)).join('')}</ol>
       <p>Choose a project</p>
-      <ol>${navItem('projects', 'Pick a project', selected ? 'complete' : '', '↗')}${navItem('project-check', 'Project quick check', selected && state.branches.includes(selected) ? 'complete' : '', '5')}</ol>
+      <ol>${navItem('projects', 'Pick a project', selected && state.selected === selected && available('projects') ? 'complete' : '', '↗')}${navItem('project-check', 'Project quick check', selected && state.branches.includes(selected) ? 'complete' : '', '5')}</ol>
       <p>Make and share</p>
       <ol>${selected ? buildSteps.map(([id, label, key], i) => navItem(id, label, checkpoint(key) ? 'complete' : '', i + 1)).join('') : navItem('open', 'Build and playtest', '', '1')}</ol>
     </nav>`;
@@ -213,7 +213,7 @@ function solutionTask(item) {
       </form>
     </article>
     <details class="task-card support" id="worked-example" ${current.help ? 'open' : ''}>
-      <summary>Worked example<span>Try a similar one</span></summary>
+      <summary>Worked example <span>Try a similar one</span></summary>
       <p>${item.example}</p>
       ${item.exampleBlocks ? script(item.exampleBlocks) : ''}
       ${item.exampleShot ? screenshot(item.exampleShot) : ''}
